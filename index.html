@@ -103,21 +103,6 @@
       padding: 10px 14px;
     }
 
-    #navbar h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    #navbar {
-      background: #007bff;
-      color: white;
-      padding: 12px 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
     /* Add hamburger */
     #hamburger {
       display: none;
@@ -132,19 +117,18 @@
         display: block;
       }
       #sidebar {
-        display: none; /* hide */
-        width: 100%;
-        max-height: 250px;
-        border-bottom: 1px solid #ddd;
+        display: none;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        right: 0;
+        background: white;
+        z-index: 1100;
       }
       #sidebar.active {
         display: block; /* show when active */
       }
-      #map {
-        height: calc(100vh - 50px); /* navbar only */
-      }
     }
-    
     /* Routing panel (desktop) */
     .leaflet-routing-container {
       max-height: 250px;
@@ -157,15 +141,8 @@
 
     @media (max-width: 768px) {
       .leaflet-routing-container {
-        position: absolute !important;
-        bottom: 70px;   /* sits above Follow Depot button */
-        left: 10px;
-        right: 10px;
-        width: auto !important;
-        max-height: 120px;
-        font-size: 11px;
-        overflow-y: auto;
-        z-index: 999;
+        bottom: 120px !important; /* leaves room for buttons */
+        border-radius: 10px;
       }
     }
 
@@ -187,6 +164,7 @@
 
   <!-- Dashboard --> 
   <div id="dashboard"> 
+      <span id="hamburger" onclick="toggleSidebar()">☰</span>
     <div class="wrapper"> 
         <div id="sidebar"> 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -436,8 +414,6 @@
           }
         }
 
-//      });
-
       // === Routing panel toggle (bind once) ===
       document.getElementById("toggleDirections").addEventListener("click", () => {
         const panel = document.querySelector(".leaflet-routing-container");
@@ -450,6 +426,7 @@
           document.getElementById("toggleDirections").innerText = "📍 Show Directions";
         }
       });
+      
     }
   </script>
 </body>
