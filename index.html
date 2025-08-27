@@ -157,8 +157,15 @@
 
     @media (max-width: 768px) {
       .leaflet-routing-container {
-        bottom: 120px !important; /* leaves room for buttons */
-        border-radius: 10px;
+        position: absolute !important;
+        bottom: 70px;   /* sits above Follow Depot button */
+        left: 10px;
+        right: 10px;
+        width: auto !important;
+        max-height: 120px;
+        font-size: 11px;
+        overflow-y: auto;
+        z-index: 999;
       }
     }
 
