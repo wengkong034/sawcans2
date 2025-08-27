@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SAWCANS Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+
+    /* Login */
+    #loginBox {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    }
+
+    #loginBox h2 {
+      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    #loginBox input, #loginBox button {
+      margin: 8px 0;
+      padding: 12px;
+      width: 280px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    #loginBox button {
+      background: #007bff;
+      transition: 0.3s;
+    }
+    #loginBox button:hover {
+      background: #0056b3;
+    }
+
+    #loginBox .card {
+      background: white;
+      padding: 30px 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    /* Dashboard */
+    #dashboard { display: none; height: 100vh; }
+    #map { flex: 1; height: 100%; }
+    .wrapper { display: flex; height: 100%; }
+
+    /* Sidebar */
+    #sidebar {
+      width: 300px; background: white; border-right: 1px solid #ddd;
+      padding: 15px; overflow-y: auto;
+    }
+    #sidebar h2 {
+      font-size: 18px;
+      color: #007bff;
+      margin: 0 0 10px;
+    }
+    .stat-box {
+      display: flex; justify-content: space-between;
+      padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px;
+    }
+    .bin-card {
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      background: #fff;
+      transition: 0.2s;
+    }
+    .bin-card:hover {
+      background: #f1faff;
+      border-color: #007bff;
+    }
+    .status {
+      padding: 2px 6px; border-radius: 4px; font-size: 12px; color: white;
+    }
+    .status.full { background: red; }
+    .status.moderate { background: orange; }
+    .status.low { background: yellow; color: black; }
+    .status.empty { background: green; }
+
+    /* Navbar */
+    #logoutBtn {
+      background: #dc3545; padding: 5px 10px;
+      border: none; border-radius: 4px; cursor: pointer; color: white;
+    }
+    #logoutBtn:hover { background: #b02a37; }
+
+    #followBtn, #toggleDirections {
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      font-size: 14px;
+      padding: 10px 14px;
+    }
+
+    #navbar h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #navbar {
+      background: #007bff;
+      color: white;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Add hamburger */
+    #hamburger {
+      display: none;
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    /* Mobile: sidebar hidden by default */
+    @media (max-width: 768px) {
+      #hamburger {
+        display: block;
+      }
+      #sidebar {
+        display: none; /* hide */
+        width: 100%;
+        max-height: 250px;
+        border-bottom: 1px solid #ddd;
+      }
+      #sidebar.active {
+        display: block; /* show when active */
+      }
+      #map {
+        height: calc(100vh - 50px); /* navbar only */
+      }
+    }
+    /* Routing panel (desktop) */
+    .leaflet-routing-container {
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 13px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      background: white;
+    }
+
+    @media (max-width: 768px) {
+      .leaflet-routing-container {
+        bottom: 120px !important; /* leaves room for buttons */
+        border-radius: 10px;
+      }
+    }
+
+
+  </style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div id="loginBox">
+    <div class="card">
+      <h2>Login to SAWCANS</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <p id="loginError" style="color:red;"></p>
+    </div>
+  </div>
+
+  <!-- Dashboard --> 
+  <div id="dashboard"> 
+    <div class="wrapper"> 
+        <div id="sidebar"> 
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">♻️ SAWCANS</h2>
+                <button id="logoutBtn" onclick="logout()" style="
+                  background:#dc3545;
+                  border:none;
+                  padding:6px 10px;
+                  border-radius:6px;
+                  color:white;
+                  cursor:pointer;
+                  width:auto;              
+                  display:inline-block;
+                  white-space:nowrap;
+                ">Logout</button>
+              </div>
+            <div id="stats"></div> 
+            <div id="binList"></div> 
+          </div>
+
+      <!-- Follow Depot Button -->
+      <button id="followBtn" style="
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 8px 12px;
+        border: none;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+      ">
+        🚗 Follow Depot: ON
+      </button>
+      <!-- Toggle Directions Button -->
+      <button id="toggleDirections" style="
+        position: absolute;
+        bottom: 70px;
+        right: 20px;
+        z-index: 1000;
+        padding: 8px 12px;
+        border: none;
+        background: #28a745;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+      ">
+        📍 Show Directions
+      </button>
+      <div id="map"></div> 
+    </div> 
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("active");
+    }
+
+    // === Firebase Config ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZeemtLknIl5GiUkVVJzkL5GAWVH2Ur74",
+      authDomain: "esp32-tutorial-859c8.firebaseapp.com",
+      databaseURL: "https://esp32-tutorial-859c8-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "esp32-tutorial-859c8",
+      storageBucket: "esp32-tutorial-859c8.appspot.com",
+      messagingSenderId: "618650746243",
+      appId: "1:618650746243:web:313250578e82d38d354ab6"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // === Login ===
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          document.getElementById("loginBox").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+          initMap();
+        })
+        .catch(error => {
+          document.getElementById("loginError").innerText = error.message;
+        });
+    }
+    function logout() {
+      auth.signOut().then(() => location.reload());
+    }
+
+    // === Map & Data ===
+    function initMap() {
+      const map = L.map('map').setView([5.4525, 100.2845], 17);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      // Helpers
+      function getMarkerColor(status) {
+        switch (status?.toLowerCase()) {
+          case "full": return "red";
+          case "moderate": return "orange";
+          case "low": return "yellow";
+          case "empty": return "green";
+          default: return "grey";
+        }
+      }
+      function createColoredIcon(color) {
+        return new L.icon({
+          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41], iconAnchor: [12, 41],
+          popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+      }
+
+      const markers = {};
+      let routeControl = null;
+      let depotMarker = null;
+      let depotLatLng = null;
+      let followDepot = true;
+
+      // Follow Depot toggle
+      const followBtn = document.getElementById("followBtn");
+      followBtn.addEventListener("click", () => {
+        followDepot = !followDepot;
+        followBtn.innerText = followDepot ? "🚗 Follow Depot: ON" : "🚗 Follow Depot: OFF";
+        followBtn.style.background = followDepot ? "#007bff" : "gray";
+      });
+
+      // === Depot live tracking ===
+      navigator.geolocation.watchPosition(pos => {
+        depotLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+
+        if (depotMarker) {
+          depotMarker.setLatLng(depotLatLng);
+        } else {
+          depotMarker = L.marker(depotLatLng, { icon: createColoredIcon("blue") })
+            .addTo(map).bindPopup("<b>🚛 Depot Location</b>").openPopup();
+        }
+
+        if (followDepot) map.panTo(depotLatLng);
+
+        // ✅ Update route whenever depot moves
+        updateRoute();
+      });
+
+      // === Load Bins from Firebase ===
+      db.ref('bins').on('value', snapshot => {
+        const bins = snapshot.val(); 
+        if (!bins) return;
+
+        const binList = document.getElementById("binList");
+        binList.innerHTML = "";
+
+        let total = 0, full = 0, empty = 0, moderate = 0, low = 0;
+
+        for (const key in bins) {
+          const bin = bins[key];
+          if (!bin.lat || !bin.lng) continue;
+
+          total++;
+          const status = bin.status?.toLowerCase() || "unknown";
+          if (status === "full") full++;
+          if (status === "empty") empty++;
+          if (status === "moderate") moderate++;
+          if (status === "low") low++;
+
+          const latlng = [bin.lat, bin.lng];
+          const icon = createColoredIcon(getMarkerColor(bin.status));
+
+          if (markers[key]) {
+            markers[key].setLatLng(latlng);
+            markers[key].setIcon(icon);
+            markers[key].options.binData = bin; // ✅ update bin data
+            markers[key].getPopup().setContent(
+              `<b>${bin.name}</b><br>Fill: ${bin.fill}<br>Status: ${bin.status}`
+            );
+          } else {
+            markers[key] = L.marker(latlng, { icon, binData: bin })
+              .addTo(map)
+              .bindPopup(`<b>${bin.name}</b><br>Fill: ${bin.fill}<br>Status: ${bin.status}`);
+          }
+
+          // Sidebar card
+          const binCard = document.createElement("div");
+          binCard.className = "bin-card";
+          binCard.innerHTML = `<b>${bin.name}</b><br>Fill: ${bin.fill}<br>
+            Status: <span class="status ${status}">${bin.status}</span>`;
+          binList.appendChild(binCard);
+        }
+
+        // Stats
+        document.getElementById("stats").innerHTML = `
+          <div class="stat-box"><span>Total Bins</span><b>${total}</b></div>
+          <div class="stat-box"><span>Full</span><b>${full}</b></div>
+          <div class="stat-box"><span>Moderate</span><b>${moderate}</b></div>
+          <div class="stat-box"><span>Low</span><b>${low}</b></div>
+          <div class="stat-box"><span>Empty</span><b>${empty}</b></div>
+        `;
+
+        // ✅ Update route when bins change
+        updateRoute();
+    });
+        // Route update
+        function updateRoute() {
+          if (!depotLatLng) {
+            console.log("⏳ Waiting for depot before routing...");
+            return;
+          }
+          if (Object.keys(markers).length === 0) {
+            console.log("⏳ Waiting for bins before routing...");
+            return;
+          }
+
+          const selectedWaypoints = [depotLatLng];
+
+          for (const key in markers) {
+            const bin = markers[key].options.binData;
+            if (bin.status?.toLowerCase() === "full" || bin.status?.toLowerCase() === "moderate") {
+              selectedWaypoints.push(markers[key].getLatLng());
+            }
+          }
+
+          if (routeControl) {
+            map.removeControl(routeControl);
+            routeControl = null;
+          }
+
+          if (selectedWaypoints.length >= 2) {
+            routeControl = L.Routing.control({
+              waypoints: selectedWaypoints,
+              createMarker: () => null,
+              lineOptions: { styles: [{ color: 'red', weight: 4 }] },
+              router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
+            }).addTo(map);
+          }
+        }
+
+//      });
+
+      // === Routing panel toggle (bind once) ===
+      document.getElementById("toggleDirections").addEventListener("click", () => {
+        const panel = document.querySelector(".leaflet-routing-container");
+        if (!panel) return;
+        if (panel.style.display === "none") {
+          panel.style.display = "block";
+          document.getElementById("toggleDirections").innerText = "📍 Hide Directions";
+        } else {
+          panel.style.display = "none";
+          document.getElementById("toggleDirections").innerText = "📍 Show Directions";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
