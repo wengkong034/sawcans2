@@ -91,6 +91,24 @@
     .status.empty { background: green; }
 
     /* Navbar */
+    #navbar {
+      display: flex;
+      align-items: center;     /* align items vertically */
+      justify-content: space-between; /* space between left (hamburger+title) and right (logout) */
+      padding: 10px 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+    }
+    #navbar .right-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    #title {
+      margin: 0;
+      margin-left: 10px; /* space between hamburger and text */
+      font-size: 18px;
+    }
     #logoutBtn {
       background: #dc3545; padding: 5px 10px;
       border: none; border-radius: 4px; cursor: pointer; color: white;
@@ -145,8 +163,6 @@
         border-radius: 10px;
       }
     }
-
-
   </style>
 </head>
 <body>
@@ -163,28 +179,16 @@
   </div>
 
   <!-- Dashboard --> 
-  <div id="dashboard">
+  <div id="dashboard"> 
     <div id="navbar">
       <span id="hamburger" onclick="toggleSidebar()">☰</span>
-      <h3>SAWCANS Dashboard</h3>
-      <button id="logoutBtn" onclick="logout()">Logout</button>
+      <div class="right-group">
+        <h2 id="title">♻️ SAWCANS Dashboard</h2>
+        <button id="logoutBtn" onclick="logout()">Logout</button>
+      </div>
     </div>
     <div class="wrapper"> 
         <div id="sidebar"> 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0;">♻️ SAWCANS</h2>
-                <button id="logoutBtn" onclick="logout()" style="
-                  background:#dc3545;
-                  border:none;
-                  padding:6px 10px;
-                  border-radius:6px;
-                  color:white;
-                  cursor:pointer;
-                  width:auto;              
-                  display:inline-block;
-                  white-space:nowrap;
-                ">Logout</button>
-              </div>
             <div id="stats"></div> 
             <div id="binList"></div> 
           </div>
@@ -195,7 +199,6 @@
         bottom: 20px;
         right: 20px;
         z-index: 1000;
-        padding: 8px 12px;
         border: none;
         background: #007bff;
         color: white;
@@ -210,7 +213,6 @@
         bottom: 70px;
         right: 20px;
         z-index: 1000;
-        padding: 8px 12px;
         border: none;
         background: #28a745;
         color: white;
