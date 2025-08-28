@@ -159,16 +159,13 @@
 
     @media (max-width: 768px) {
       .leaflet-routing-container {
-        position: absolute !important;
-        top: 60px;           /* just below navbar */
-        right: 10px;         /* docked to right */
-        max-width: 280px;    /* prevent full width */
-        max-height: 40vh;    /* scroll if too long */
-        overflow-y: auto;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        z-index: 1200;
+        bottom: 120px !important;   /* move it up to leave space for buttons */
+        left: 10px !important;      /* add some padding from edges */
+        right: 10px !important;
+        max-height: 40vh;           /* make it smaller so it fits */
+        overflow-y: auto;           /* scroll if too long */
+        border-radius: 10px;
+        font-size: 14px;            /* smaller text for mobile */
       }
     }
   </style>
