@@ -163,10 +163,14 @@
   </div>
 
   <!-- Dashboard --> 
-  <div id="dashboard"> 
+  <div id="dashboard">
+    <div id="navbar">
+      <span id="hamburger" onclick="toggleSidebar()">☰</span>
+      <h3>SAWCANS Dashboard</h3>
+      <button id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
     <div class="wrapper"> 
         <div id="sidebar"> 
-            <span id="hamburger" onclick="toggleSidebar()">☰</span>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0;">♻️ SAWCANS</h2>
                 <button id="logoutBtn" onclick="logout()" style="
